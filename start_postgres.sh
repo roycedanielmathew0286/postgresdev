@@ -36,15 +36,18 @@ COMPOSE_FILE="docker-compose-${PG_USER}.yml"
 export PG_USER PG_PASSWORD PG_DB PG_PORT CONTAINER_NAME VOLUME_NAME
 envsubst < docker-compose.yml.template > $COMPOSE_FILE
 
-# 3. Start Postgres via Docker Compose
-echo "Starting Postgres ($CONTAINER_NAME) on port $PG_PORT..."
-docker compose -f $COMPOSE_FILE up -d
+# 3. Start container with a unique project name
+PROJECT_NAME="proj_${PG_USER}"
 
-# 4. Wait for Postgres to be ready
+# 4. Start Postgres via Docker Compose
+echo "Starting Postgres ($CONTAINER_NAME) on port $PG_PORT..."
+docker compose -p $PROJECT_NAME -f $COMPOSE_FILE up -d
+
+# 5. Wait for Postgres to be ready
 echo "⏳ Waiting for Postgres to start..."
 sleep 5
 
-# 5. Save connection details to JSON
+# 6. Save connection details to JSON
 JSON_FILE="pg_connection_${PG_USER}.json"
 cat <<EOF > $JSON_FILE
 {
@@ -60,7 +63,7 @@ cat <<EOF > $JSON_FILE
 }
 EOF
 
-# 6. Print connection info
+# 7. Print connection info
 echo "----------------------------"
 echo "Postgres Dev Instance Ready!"
 echo "----------------------------"
@@ -68,5 +71,5 @@ cat $JSON_FILE
 echo "----------------------------"
 echo "Connection details saved to $JSON_FILE"
 
-# Inject dynamic DB name into init.sql
+# 8. Revert to Original init.sql
 sed -i "s/$PG_DB/__PG_DB__/" "$SQL_DIR/init/init.sql"
